@@ -40,10 +40,18 @@ function blockWindows() {
         });
 };
 
+chrome.tabs.onCreated.addListener(function (tab) {
+   chrome.storage.local.get(['status'], res => {
+    if (res.status) { 
+      blockWindows();
+    }
+   });
+});
+
 chrome.tabs.onUpdated.addListener(function (tabId, info) {
   chrome.storage.local.get(['status'], res => {
     if (res.status) { 
-      blockWindows(tabId);
+      blockWindows();
     }
   });
 });
