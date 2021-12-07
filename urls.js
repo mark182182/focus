@@ -28,15 +28,17 @@ window.onload = () => {
   });
 
   statusButton.addEventListener('click', (event) => {
-    let status = event.target.value === 'true';
-    status = !status;
-    chrome.storage.local.set({'status': status}, () => {
-      setStatus(status);
-    });
+    let status = event.target.value !== 'true';
+    if (status) {
+      chrome.storage.local.set({'status': !status}, () => {
+        setStatus(status);
+      });
+    }
   });
   
   const setStatus = (status) => {
     statusButton.value = status;
-    statusButton.innerHTML = status ? 'Enabled' : 'Disabled';   
+    statusButton.innerHTML = status ? 'Disable' : 'Enable';
+    statusButton.disabled = true;
   };
 };

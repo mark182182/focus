@@ -1,16 +1,18 @@
-* {
-  font-family: 'Consolas';
-}
-
 body {
   margin: 0;
   padding: 0;
 }
 
 
+#wrapper * {
+  font-family: 'Consolas';
+  font-size: 20px;
+}
+
 #wrapper {
   background: #000000;
   display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   justify-content: center;
@@ -20,7 +22,8 @@ body {
 #text-box {
   display: flex;
   width: 50%;
-  height: 50%;
+  height: 20%;
+  margin: 20px;
 }
 
 h1 {
@@ -30,7 +33,7 @@ h1 {
   border: 10px solid #000000;
   justify-content: center;
   align-items: center;
-  background: #babbab;
+  background-color: #2e2e2e;
   color: #efefef;
   text-align: center;
 }
@@ -38,4 +41,88 @@ h1 {
 #buttons {
   display:flex;
   justify-content: space-around;
+}
+
+#sudoku-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#sudoku-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+#sudoku-puzzle {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+  align-items: center;
+  margin-top: 20px;
+  border: 1px solid #cefcef;
+}
+
+#sudoku-puzzle * {
+  display: flex;
+  justify-content: center;
+}
+
+#sudoku-puzzle div {
+  width: 100%;
+  background-color: #2e2e2e;
+}
+
+#sudoku-puzzle div:nth-child(3n):nth-child(-n+6) {
+  border-bottom: 2px solid #cefcef;
+}
+
+#sudoku-puzzle div span {
+  width: 65%;
+  font-size: 14px;
+  color: #efefef;
+  margin: 2px 4px 2px 4px;
+  background-color: #202020;
+  user-select: none;
+}
+
+#sudoku-puzzle div span:nth-child(3n):nth-child(-n+6) {
+  border-right: 2px solid #cefcef;
+}
+
+#sudoku-puzzle div span:hover {
+  background-color: #babbab;
+}
+
+#sudoku-controls {
+  border: 1px solid #cefcef;
+}
+
+#sudoku-controls * {
+  display: flex;
+  justify-content: center;
+}
+
+#sudoku-controls div {
+  width: 100%;
+  background-color: #2e2e2e;
+}
+
+#sudoku-controls div span {
+  margin: 2px 4px 2px 4px;
+  font-size: 18px;
+  color: #efefef;
+  background-color: #202020;
+  user-select: none;
+}
+
+#sudoku-controls div span:hover {
+  background-color: #babbab;
+}
+
+#controls {
+  margin: 8px;
+  color: #efefef;
 }
