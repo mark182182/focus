@@ -93,7 +93,7 @@ h1 {
 }
 
 #sudoku-puzzle div span:hover {
-  background-color: #babbab;
+  background-color: #babbab !important;
 }
 
 #sudoku-controls {
@@ -119,10 +119,18 @@ h1 {
 }
 
 #sudoku-controls div span:hover {
-  background-color: #babbab;
+  background-color: #babbab !important;
 }
 
 #controls {
   margin: 8px;
   color: #efefef;
+}
+
+.conflict {
+  background-color: #880000 !important;
+}
+
+.disabled {
+  background-color: #000000 !important;
 }
