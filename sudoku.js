@@ -1,7 +1,7 @@
 window.onload = () => {
   let currentlySelected = null;
   let currentConflicts = [];
-  
+
   const availableNums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   let squares = [];
   squares.length = 81;
@@ -13,14 +13,15 @@ window.onload = () => {
   // ordering of the columns inside a grid
   const gridColumns = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
 
-  let generatedSquares = [];
+  let solution = [];
+  
   let conflictingIndexes = [];
   let disabledIndexes = [];
-
-  const possibleNumsByIdx = new Map();
-  for (let i = 0; i < squares.length; i++) {
-    possibleNumsByIdx.set(i, availableNums);
-  };
+  
+  let initialIndexes = [];  
+  for (let i = 0; i < 18; i++) {
+    initialIndexes.push(i);
+  }
 
   const generateGridsInColumn = (addIndex) => {
     let tempGrid = [];
@@ -121,43 +122,131 @@ window.onload = () => {
       }
     });
 
-    conflictingIndexes.filter(idx => !conflictingIndexes.includes(idx));
+    if (conflictingIndexes.length > 0) {
+      const confValues = conflictingIndexes.map(idx => squares[idx]);
+    }
 
     return conflictingIndexes.length === 0;
   }
 
-  const generateRandNumber = (squareIdx, possibleNums) => {
+  const generateRandNumber = (squareIdx, invalidNums) => {
     const randNum = availableNums[Math.floor(Math.random() * availableNums.length)];
-    if (!possibleNums.includes(randNum)) {
-      return generateRandNumber(squareIdx, possibleNums);
+    if (invalidNums.includes(randNum)) {
+      return generateRandNumber(squareIdx, invalidNums);
     } else {
       return randNum;
     }
   }
 
-  const fillWithInitialNumbers = (remainingIndexes, remainingValues, availableNums) => {
-    for (let i = 0; i < remainingIndexes.length; i++) {
-      const idx = remainingIndexes[i];
+  const fillWithInitialNumbers = () => {
+    for (let i = 0; i < initialIndexes.length; i++) {
+      const idx = initialIndexes[i];
+      let invalidNums = [];
       if (squares[idx] === 0) {
-        const possibleNums = possibleNumsByIdx.get(idx);
-        if (possibleNums.length === 0) {
-          console.log('asd');
-          squares[idx] = 0;
-          remainingValues[i] = 0;
-          possibleNumsByIdx.set(i, availableNums);
-          return;
+        for (let j = 1; j < 10; j++) {
+          const selectedNum = generateRandNumber(idx, invalidNums);
+          const isValid = validate(idx, selectedNum);
+          if (isValid) {
+            squares[idx] = selectedNum;
+            fillWithInitialNumbers();
+            if (invalidNums.length === 9) {
+              squares[idx] = 0;
+            }
+          } else {
+            invalidNums.push(selectedNum);
+          }
         }
-        const selectedNum = generateRandNumber(idx, possibleNums);
-        const isValid = validate(idx, selectedNum);
-        if (!isValid) {
-          possibleNumsByIdx.set(selectedNum, possibleNumsByIdx.get(i).filter(num => num != selectedNum));
-        } else {
-          squares[idx] = selectedNum;
-          remainingValues[i] = selectedNum;
-          break;
-        }
+        return;
       }
     }
+  }
+
+  const generateIndexesToSolve = () => {
+    let indexesToSolve = [];
+    squares.forEach((value, idx, array) => {
+      if (!initialIndexes.includes(idx)) {
+        indexesToSolve.push(idx);
+      }
+    });
+    return indexesToSolve;
+  }
+
+  const generateInitialNums = () => {
+    const indexesToSolve = generateIndexesToSolve();
+    fillWithInitialNumbers();
+    return indexesToSolve;
+  }
+
+  const solve = (indexesToSolve, time) => {
+    if (new Date().getTime() - time > 60) {
+      console.log(time);
+      return;
+    }
+    for (let i = 0; i < indexesToSolve.length; i++) {
+      const idx = indexesToSolve[i];
+      if (squares[idx] === 0) {
+        let invalidNums = [];
+        for (let j = 1; j < 10; j++) {
+          const isValid = validate(idx, j);
+            if (isValid) {
+              squares[idx] = j;
+              solve(indexesToSolve, time);
+              if (invalidNums.length === 9) {
+                squares[idx] = 0;
+              }
+            } else {
+              invalidNums.push(j);
+            }
+        }
+        return;
+      }
+    }
+  }
+
+  const generateRandomPuzzle = () => {
+    while (squares.includes(0)) {
+      squares.fill(0);
+      const indexesToSolve = generateInitialNums();
+      solve(indexesToSolve, start);
+      if (!squares.includes(0)) {
+        solution = squares;
+        break;
+      }
+    }
+
+    const idxToRemoveInGrids = [];
+    for (let i = 1; i < 10; i++) {
+      idxToRemoveInGrids.push(5);
+    }
+
+    let indexesToRemove = [];
+
+    let invalidIndexes = [];
+    const getRandGridIdx = (indexesToRemove) => {
+      let index = Math.ceil(Math.random() * 7) + 1;
+      if (!indexesToRemove.includes(index) && !invalidIndexes.includes(index)) {
+        invalidIndexes.push(index);
+        getRandGridIdx(indexesToRemove); 
+      }
+      return index;
+    }
+
+    grids.forEach((value, gridIdx, arr) => {
+      const numsToRemove = idxToRemoveInGrids[gridIdx];
+      for (let i = 0; i < numsToRemove; i++) {
+        const index = getRandGridIdx(indexesToRemove);
+        indexesToRemove.push(value[index]);
+        invalidIndexes = [];
+      }
+    });
+
+    squares = squares.map((value, idx, arr) => {
+      if (indexesToRemove.includes(idx)) {
+        return 0;
+      } else {
+        return value;
+      }
+    });
   }
 
   const validateAfterGeneration = () => {
@@ -170,82 +259,6 @@ window.onload = () => {
       }
     });
     console.log('Error messages:' + errorMessages);
-  }
-
-  const generateGridFills = () => {
-    let gridFillNums = [];
-    for (let i = 0; i < 9; i++) {
-      gridFillNums = [...gridFillNums, Math.ceil(Math.random() * 3 + 1)];
-    }
-    const tempGrid = grids.map((grid, index, arr) => {
-      const numsToRemove = 9 - gridFillNums[index];
-      for (let i = 0; i < numsToRemove; i++) {
-        const indexToRemove = Math.ceil(Math.random() * (grid.length - 1) + 1);
-        grid = grid.filter((gridNum, gridNumIdx, gridArr) => gridNumIdx !== indexToRemove);
-      }
-      return grid;
-    });
-
-    const remainingIndexesToFilter = tempGrid.flatMap(grid => grid);
-    let remainingIndexes = [];
-    squares.forEach((value, idx, array) => {
-      if (!remainingIndexesToFilter.includes(idx)) {
-        remainingIndexes.push(idx);
-      }
-    });
-    return remainingIndexes;
-  }
-
-  const generateRandomPuzzle = () => {
-    let remainingIndexes = generateGridFills();
-    let remainingValues = [];
-    const initRemainingValues = (remainingValues, remainingIndexes) => {
-      remainingValues.length = remainingIndexes.length;
-      remainingValues.fill(0);
-    }
-    initRemainingValues(remainingValues, remainingIndexes);
-    let start = new Date().getTime();
-    while (remainingValues.includes(0)) {
-      if (new Date().getTime() - start >= 5) {
-        start = new Date().getTime();
-        squares.fill(0);
-        remainingIndexes = generateGridFills();
-        initRemainingValues(remainingValues, remainingIndexes);
-      }
-      fillWithInitialNumbers(remainingIndexes, remainingValues, availableNums);
-    }
-
-    //validateAfterGeneration();
-    console.log('Initial squares after generation');
-    console.log(squares);
-
-    function solve() {
-      for (let i = 0; i < squares.length; i++) {
-        if (squares[i] === 0) {
-          const possibleNums = possibleNumsByIdx.get(i);
-          for (let j = 0; j < possibleNums.length; j++) {
-            const selectedNum = possibleNums[j];
-            const isValid = validate(i, selectedNum);
-            if (isValid) {
-              squares[i] = selectedNum;
-              possibleNumsByIdx.set(i, possibleNumsByIdx.get(i).filter(num => num != selectedNum));
-              //console.log(possibleNumsByIdx.get(i));
-              solve();
-              squares[i] = 0;
-              possibleNumsByIdx.set(i, availableNums);
-            }
-          }
-          //console.log(squares);
-          return;
-        }
-      }
-    }
-
-    solve();
-    validateAfterGeneration();
-    console.log('Square after generation');
-    console.log(squares);
-    console.log('Square completed');
   }
 
   const setSquare = (square) => {
@@ -279,7 +292,7 @@ window.onload = () => {
       squares[currentIndex] = parseInt(currentValue);
       const isValid = validate(currentIndex, currentValue);
       if (!isValid) {
-        currentlySelected.style.backgroundColor = "#AA0000";
+        currentlySelected.classList.add('conflict');
         conflictingIndexes.forEach(idx => {
           const conflictingElem = document.querySelector(`span[index='${idx}']`);
           conflictingElem.classList.add('conflict');
@@ -287,11 +300,11 @@ window.onload = () => {
           currentConflicts.push(conflictingElem);
         });
       } else {
-        currentlySelected.style.backgroundColor = "#00AA00";
+        currentlySelected.classList.remove('conflict');
       }
     }
   }
-  
+
   const sudokuContainer = document.querySelector('#sudoku-container');
 
   const loadPuzzle = async () => {
