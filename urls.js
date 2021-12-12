@@ -13,32 +13,33 @@ window.onload = () => {
            urlsToSave.add(url); 
          });
     chrome.storage.local.set({'blacklist':[...urlsToSave]}, () => {
-      alert('saved');
+      alert('Saved successfully');
     });
   });
   
-  chrome.storage.local.get(['blacklist', 'status'], res => {
+  chrome.storage.local.get(['blacklist', 'disabled'], res => {
     if (res && res.blacklist) {
       blacklist = res.blacklist;
       input.value = blacklist;
     }
-    if (res && res.status != undefined) {
-      setStatus(res.status);
+    if (res && res.disabled != undefined) {
+      setStatus(res.disabled);
     }
   });
 
   statusButton.addEventListener('click', (event) => {
-    let status = event.target.value !== 'true';
-    if (status) {
-      chrome.storage.local.set({'status': !status}, () => {
-        setStatus(status);
+    const disabled = JSON.parse(event.target.value) === true;
+    if (disabled) {
+      chrome.storage.local.set({'disabled': false}, () => {
       });
+      setStatus(false);
     }
   });
   
   const setStatus = (status) => {
+    const disabled = status === true;
+    statusButton.innerHTML = disabled ? 'Enable' : 'Disable';
     statusButton.value = status;
-    statusButton.innerHTML = status ? 'Disable' : 'Enable';
-    statusButton.disabled = true;
+    statusButton.disabled = !disabled;
   };
 };

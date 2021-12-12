@@ -1,4 +1,5 @@
 window.onload = () => {
+
   let currentlySelected = null;
   let currentConflicts = [];
 
@@ -14,11 +15,11 @@ window.onload = () => {
   const gridColumns = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
 
   let solution = [];
-  
+
   let conflictingIndexes = [];
   let disabledIndexes = [];
-  
-  let initialIndexes = [];  
+
+  let initialIndexes = [];
   for (let i = 0; i < 18; i++) {
     initialIndexes.push(i);
   }
@@ -40,6 +41,43 @@ window.onload = () => {
   const thirdColumn = generateGridsInColumn(6);
   grids = [...grids, ...secondColumn];
   grids = [...grids, ...thirdColumn];
+
+
+  const showTimesUpDialog = () => {
+    const dialog = document.querySelector('#timesup-dialog');
+    const closeButton = document.querySelector('#close-timesup-dialog');
+    dialog.addEventListener('close', (event) => {
+      window.close();
+    });
+    dialog.showModal();
+  }
+
+  const loadStart = new Date().getTime();
+  let isSolved = false;
+  let currentTime = [];
+  const timer = setInterval(() => {
+    const limit = 7.2 - (new Date().getTime() - loadStart) / 1000 / 60;
+    const current = limit.toPrecision(4).split('.').map(num => parseInt(num));
+    const mins = current[0];
+    let secs = current[1] >= 170 ? `${60 * current[1]}`.substring(0, 2) : '0' + `${60 * current[1]}`.substring(0, 1);
+    if (current[1] <= 15) {
+      secs = '00';
+    }
+
+    if (secs !== currentTime[1]) {
+      currentTime = [mins, secs];
+      document.querySelector('#current-time').innerHTML = currentTime.join(':');
+    }
+
+    if (isSolved) {
+      clearInterval(timer);
+    }
+
+    if (limit <= 0 && !isSolved) {
+      clearInterval(timer);
+      showTimesUpDialog();
+    }
+  }, 300);
 
   const validate = (index, value) => {
     conflictingIndexes = [];
@@ -179,7 +217,6 @@ window.onload = () => {
 
   const solve = (indexesToSolve, time) => {
     if (new Date().getTime() - time > 60) {
-      console.log(time);
       return;
     }
     for (let i = 0; i < indexesToSolve.length; i++) {
@@ -188,15 +225,15 @@ window.onload = () => {
         let invalidNums = [];
         for (let j = 1; j < 10; j++) {
           const isValid = validate(idx, j);
-            if (isValid) {
-              squares[idx] = j;
-              solve(indexesToSolve, time);
-              if (invalidNums.length === 9) {
-                squares[idx] = 0;
-              }
-            } else {
-              invalidNums.push(j);
+          if (isValid) {
+            squares[idx] = j;
+            solve(indexesToSolve, time);
+            if (invalidNums.length === 9) {
+              squares[idx] = 0;
             }
+          } else {
+            invalidNums.push(j);
+          }
         }
         return;
       }
@@ -207,6 +244,7 @@ window.onload = () => {
     while (squares.includes(0)) {
       squares.fill(0);
       const indexesToSolve = generateInitialNums();
+      const start = new Date().getTime();
       solve(indexesToSolve, start);
       if (!squares.includes(0)) {
         solution = squares;
@@ -226,7 +264,7 @@ window.onload = () => {
       let index = Math.ceil(Math.random() * 7) + 1;
       if (!indexesToRemove.includes(index) && !invalidIndexes.includes(index)) {
         invalidIndexes.push(index);
-        getRandGridIdx(indexesToRemove); 
+        getRandGridIdx(indexesToRemove);
       }
       return index;
     }
@@ -249,16 +287,16 @@ window.onload = () => {
     });
   }
 
-  const validateAfterGeneration = () => {
-    let errorMessages = [];
+  const validateAllSquares = () => {
+    let conflicts = [];
     const start = new Date().getTime();
     squares.forEach((value, index, array) => {
       const isValid = validate(index, value);
       if (!isValid) {
-        errorMessages.push('Invalid at index:' + index + '\r\n');
+        conflicts.push(index);
       }
     });
-    console.log('Error messages:' + errorMessages);
+    return conflicts;
   }
 
   const setSquare = (square) => {
@@ -268,39 +306,67 @@ window.onload = () => {
     if (!square.target.classList.contains('disabled')) {
       currentlySelected = square.target;
     }
-    currentlySelected.style.backgroundColor = "#A2A2A2";
-    console.log(currentlySelected);
+    if (currentlySelected !== null && currentlySelected.id !== 'invalid') {
+      currentlySelected.style.backgroundColor = "#A2A2A2";
+    }
+  }
+
+  const showSolvedDialog = () => {
+    const dialog = document.querySelector('#success-dialog');
+    const successMessage = document.querySelector('#success-message');
+    const time = (new Date().getTime() - loadStart) / 1000 / 60;
+    successMessage.innerHTML = successMessage.innerHTML.replace('$TIME', time.toPrecision(1));
+    const closeButton = document.querySelector('#close-dialog');
+    dialog.addEventListener('close', (event) => {
+      window.close();
+    });
+    dialog.showModal();
+    chrome.storage.local.set({ 'disabled': true }, () => {
+    });
   }
 
   const setSquareValue = (controlSquare) => {
     if (currentlySelected != null && !currentlySelected.classList.contains('disabled')) {
-      if (currentConflicts.length > 0) {
-        currentConflicts.forEach(elem => {
-          elem.classList.remove('conflict');
-          if (disabledIndexes.includes(parseInt(elem.getAttribute('index')))) {
-            elem.classList.add('disabled');
-          }
-        });
-      }
-      currentConflicts = [];
       const prevNumber = currentlySelected.innerHTML;
-      console.log(`current: ${currentlySelected.innerHTML}`);
       currentlySelected.innerHTML = controlSquare.innerHTML;
-      console.log(`value: ${controlSquare.innerHTML}`);
       const currentIndex = parseInt(currentlySelected.getAttribute('index'));
       const currentValue = parseInt(currentlySelected.innerHTML);
-      squares[currentIndex] = parseInt(currentValue);
+      squares[currentIndex] = currentValue;
       const isValid = validate(currentIndex, currentValue);
       if (!isValid) {
-        currentlySelected.classList.add('conflict');
+        currentlySelected.id = 'invalid';
         conflictingIndexes.forEach(idx => {
           const conflictingElem = document.querySelector(`span[index='${idx}']`);
-          conflictingElem.classList.add('conflict');
-          conflictingElem.classList.remove('disabled');
+          if (conflictingElem.classList.contains('disabled')) {
+            conflictingElem.id = 'conflict';
+          }
           currentConflicts.push(conflictingElem);
         });
       } else {
-        currentlySelected.classList.remove('conflict');
+        currentlySelected.style.backgroundColor = "#00A200";
+        currentlySelected.id = '';
+      }
+     
+      if (currentConflicts.length > 0) {
+      let conflictsToRemove = [];
+        currentConflicts.forEach((elem, idx, arr) => {
+          const index = parseInt(elem.getAttribute('index'));
+          const value = parseInt(elem.innerHTML);
+          const isValid = validate(index, value);
+          if (isValid) {
+            elem.id = '';
+            conflictsToRemove.push(idx);
+          }
+        });
+        conflictsToRemove.forEach(idx => {
+          currentConflicts = currentConflicts.slice(idx, 1);
+        });
+      }
+    }
+    if (!squares.includes(0)) {
+      isSolved = validateAllSquares().length === 0;
+      if (isSolved) {
+        showSolvedDialog();
       }
     }
   }
@@ -344,8 +410,6 @@ window.onload = () => {
     sudokuContainer.appendChild(sudokuControls);
   }
 
-  const start = new Date().getTime();
   generateRandomPuzzle();
   loadPuzzle();
-  console.log(`Loading took: ${new Date().getTime() - start} ms`);
 }

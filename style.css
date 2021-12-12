@@ -139,10 +139,18 @@ h1 {
   color: #efefef;
 }
 
-.conflict {
+#conflict {
   background-color: #880000 !important;
+}
+
+#invalid {
+  background-color: #888800 !important;
 }
 
 .disabled {
   background-color: #000000 !important;
+}
+
+.dialog {
+  text-align: center;
 }
