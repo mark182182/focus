@@ -1,6 +1,5 @@
 window.onload = () => {
-
-  let currentlySelected = null;
+ let currentlySelected = null;
   let currentConflicts = [];
 
   const availableNums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -332,6 +331,23 @@ window.onload = () => {
       const currentIndex = parseInt(currentlySelected.getAttribute('index'));
       const currentValue = parseInt(currentlySelected.innerHTML);
       squares[currentIndex] = currentValue;
+      
+      if (currentConflicts.length > 0) {
+        let conflictsToRemove = [];
+        currentConflicts.forEach((elem, idx, arr) => {
+          const index = parseInt(elem.getAttribute('index'));
+          const value = parseInt(elem.innerHTML);
+          const isValid = validate(index, value);
+          if (isValid) {
+            elem.id = '';
+            conflictsToRemove.push(idx);
+          }
+        });
+        conflictsToRemove.forEach(idx => {
+          currentConflicts = currentConflicts.slice(idx, 1);
+        });
+      }
+      
       const isValid = validate(currentIndex, currentValue);
       if (!isValid) {
         currentlySelected.id = 'invalid';
@@ -345,22 +361,6 @@ window.onload = () => {
       } else {
         currentlySelected.style.backgroundColor = "#00A200";
         currentlySelected.id = '';
-      }
-     
-      if (currentConflicts.length > 0) {
-      let conflictsToRemove = [];
-        currentConflicts.forEach((elem, idx, arr) => {
-          const index = parseInt(elem.getAttribute('index'));
-          const value = parseInt(elem.innerHTML);
-          const isValid = validate(index, value);
-          if (isValid) {
-            elem.id = '';
-            conflictsToRemove.push(idx);
-          }
-        });
-        conflictsToRemove.forEach(idx => {
-          currentConflicts = currentConflicts.slice(idx, 1);
-        });
       }
     }
     if (!squares.includes(0)) {
