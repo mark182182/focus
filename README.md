@@ -8,7 +8,7 @@
 ### Initial screen displaying the block
 <img src="initial_screen.PNG" alt="drawing" width="650"/>
 
-### Sucess screen
+### Success screen
 <img src="success_screen.PNG" alt="drawing" width="650"/>
 
 ### Failure screen
