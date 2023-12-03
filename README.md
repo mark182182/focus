@@ -3,6 +3,7 @@
 ## You have to solve a sudoku puzzle in order to disable the Focus mode.
 
 ## To be fixed:
+- Store the closed tabs and display them on the popup.html page, so they can be reopened later on
 - 'invalid' id should be present on selectable components on conflict
 - 'invalid' id should be removed after the number is valid
 - Countdown timer should present the correct time when it's <= 10 secs
